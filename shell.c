@@ -94,6 +94,9 @@ int interactiveShell()
       printf("Last Command Formed: %s\n", currComm);
       // free(currComm); // Free the memory for currComm if there is something that is still not parsed yet
     }
+
+    //Fork into a child process for executing command.
+    executeCommand(commands[0], commands);
   }
   free(line);
   return 0;
@@ -131,4 +134,49 @@ int fetchline(char **line)
     (*line)[n - 1] = '\0';
   }
   return n;
+}
+
+// fork() into a child process.
+// execvp() to run command with Unix API.
+void executeCommand(char * command, char * commands)
+{
+  //  Process ID's are used to differentiate
+  //  between parent and child. 
+  pid_t parent = getpid();
+  pid_t pid = fork();
+
+  //  If the child process was unsuccessfully created, 
+  //  then return an error message.
+  if (pid == -1)
+  {
+    printf("%s, %s", "ERROR: Invalid Unix Command", command);
+  }
+  /**
+   * TODO: Oliver speaking: Command execution works without waitpid(), I just
+   * added it here because without it the "osh>" prompt disappears and only
+   * appears in output. My plan is to come back and add processing of the "&"
+   * and ";" options, with the prompt returning. 
+   * 
+   * Then, I will focus on polishing fork()/execvp()/wait() so I can move on 
+   * to dup2() and pipe(). I hope to be done by either Saturday or early Sunday.
+   * Let me know if this works for you. 
+  */
+  //  If the process is a parent process, then
+  //  parent must wait for child's exit.
+  else if (pid > 0) 
+  {
+    int s;
+    waitpid(pid, &s, 0);
+  }
+  //  Else, the command is processed with execvp()
+  //  and a Unix command is executed. 
+  else
+  {
+    execvp(command, commands);
+    _exit(EXIT_FAILURE);
+  }
+  //  Flush stcout so that prompt remains 
+  //  after process is finished.
+  fflush(stdout);
+  return;
 }
