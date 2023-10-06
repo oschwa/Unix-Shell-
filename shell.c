@@ -94,7 +94,8 @@ int interactiveShell()
       printf("Last Command Formed: %s\n", currComm);
       // free(currComm); // Free the memory for currComm if there is something that is still not parsed yet
     }
-
+    //set arguement to NULL here so that exec executes properly and knows to stop
+    commands[arguementsCounter++] = NULL;
     //Fork into a child process for executing command.
     executeCommand(commands[0], commands);
   }
@@ -138,7 +139,7 @@ int fetchline(char **line)
 
 // fork() into a child process.
 // execvp() to run command with Unix API.
-void executeCommand(char * command, char * commands)
+void executeCommand(char * command, char * commands[])
 {
   //  Process ID's are used to differentiate
   //  between parent and child. 

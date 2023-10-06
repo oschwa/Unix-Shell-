@@ -8,6 +8,7 @@
 #include <stdlib.h>  // calloc
 #include <string.h>  // strcmp
 #include <unistd.h>  // execvp
+#include <sys/wait.h> //waitpid
 
 #define MAXLINE 80
 #define PROMPT "osh> "
@@ -20,7 +21,7 @@ int fetchline(char **line);
 int interactiveShell();
 int runTests();
 void processLine(char *line);
-void executeCommand(char * command, char * commands);
+void executeCommand(char * command, char * commands[]);
 int main();
 
 #endif
