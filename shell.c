@@ -73,6 +73,9 @@ int interactiveShell()
       }
       else
       {
+        //  If ";" or "&" is not specified, then the shell
+        //  will run child processes with wait().
+        waitFlag = true;
         // Allocate memory for the current command
         if (currComm == NULL)
         {
@@ -97,7 +100,7 @@ int interactiveShell()
     //set arguement to NULL here so that exec executes properly and knows to stop
     commands[arguementsCounter++] = NULL;
     //Fork into a child process for executing command.
-    executeCommand(commands[0], commands);
+    executeCommand(commands[0], commands, waitFlag);
   }
   free(line);
   return 0;
@@ -139,7 +142,7 @@ int fetchline(char **line)
 
 // fork() into a child process.
 // execvp() to run command with Unix API.
-void executeCommand(char * command, char * commands[])
+void executeCommand(char * command, char * commands[], bool waitFlag)
 {
   //  Process ID's are used to differentiate
   //  between parent and child. 
@@ -152,26 +155,17 @@ void executeCommand(char * command, char * commands[])
   {
     printf("%s, %s", "ERROR: Invalid Unix Command", command);
   }
-  /**
-   * TODO: Oliver speaking: Command execution works without waitpid(), I just
-   * added it here because without it the "osh>" prompt disappears and only
-   * appears in output. My plan is to come back and add processing of the "&"
-   * and ";" options, with the prompt returning. 
-   * 
-   * Then, I will focus on polishing fork()/execvp()/wait() so I can move on 
-   * to dup2() and pipe(). I hope to be done by either Saturday or early Sunday.
-   * Let me know if this works for you. 
-  */
   //  If the process is a parent process, then
-  //  parent must wait for child's exit.
+  //  parent must wait for child's exit. If "&"
+  //  was specified then run concurrent.
   else if (pid > 0) 
   {
-    int s;
-    waitpid(pid, &s, 0);
+    if (waitFlag) waitpid(pid, NULL, 0);
+    return;
   }
   //  Else, the command is processed with execvp()
   //  and a Unix command is executed. 
-  else
+  else 
   {
     execvp(command, commands);
     _exit(EXIT_FAILURE);
