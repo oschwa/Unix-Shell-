@@ -21,7 +21,7 @@ int fetchline(char **line);
 int interactiveShell();
 int runTests();
 void processLine(char *line);
-void executeCommand(char * command, char * commands[], bool waitFlag);
+void executeCommand(const char * command, const char * commands[], const bool waitFlag);
 int main();
 
 #endif

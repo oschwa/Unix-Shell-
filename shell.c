@@ -29,36 +29,39 @@ int interactiveShell()
       should_run = false;
       continue;
     }
-
     // split string by spaces
     char *spaceToken = strtok(line, " ");
 
     // create pointer to array to store all commands
     char *commands[MAXLINE];
-    int arguementsCounter = 0;
+    int argumentsCounter = 0;
 
     // parse through string and extract all commands
     while (spaceToken != NULL)
     {
-      commands[arguementsCounter++] = spaceToken;
+      commands[argumentsCounter++] = spaceToken;
       spaceToken = strtok(NULL, " ");
     }
 
-    char *currComm = NULL;
-    bool waitFlag = false;
+    char * cmd = NULL;
+    char * cmdArgs[argumentsCounter];
+    bool waitFlag = true;
     bool hasActiveCommand = false;
 
     //the code below will parse through the string and print each command that needs to execute one by one. This will parse through seperators "&" and ";"
-    for (int i = 0; i < arguementsCounter; i++)
+    for (int i = 0; i < argumentsCounter; i++)
     {
       if (strcmp(commands[i], ";") == 0)
       {
         waitFlag = true;
         if (hasActiveCommand)
         {
-          printf("Last Command Formed: %s\n", currComm);
-          free(currComm);  // Free previously allocated memory
-          currComm = NULL; // Reset pointer to NULL for the next command
+          cmdArgs[argumentsCounter - 1] = NULL;
+          executeCommand(cmd, cmdArgs, waitFlag);
+          free(cmd);  // Free previously allocated memory
+          cmd = NULL; // Reset pointer to NULL for the next command
+          hasActiveCommand = false;
+          continue;
         }
       }
       else if (strcmp(commands[i], "&") == 0)
@@ -66,41 +69,36 @@ int interactiveShell()
         waitFlag = false;
         if (hasActiveCommand)
         {
-          printf("Last Command Formed: %s\n", currComm);
-          free(currComm);  // Free previously allocated memory
-          currComm = NULL; // Reset pointer to NULL for the next command
+          cmdArgs[argumentsCounter - 1] = NULL;
+          executeCommand(cmd, cmdArgs, waitFlag);
+          free(cmd);  // Free previously allocated memory
+          cmd = NULL; // Reset pointer to NULL for the next command
+          hasActiveCommand = false;
+          continue;
         }
       }
       else
       {
-        //  If ";" or "&" is not specified, then the shell
-        //  will run child processes with wait().
-        waitFlag = true;
-        // Allocate memory for the current command
-        if (currComm == NULL)
+        if (cmd == NULL)
         {
-          currComm = malloc(strlen(commands[i]) + 1);
-          strcpy(currComm, commands[i]);
+          // Allocate memory for the current command
+          cmd = malloc(strlen(commands[i]));
+          strcpy(cmd, commands[i]);
           hasActiveCommand = true;
         }
-        else
-        {
-          // Reallocate memory for currComm and concatenate the current command
-          currComm = realloc(currComm, strlen(currComm) + strlen(commands[i]) + 2); // +2 for space and null terminator
-          strcat(currComm, " ");
-          strcat(currComm, commands[i]);
-        }
+        // Concatenate the command arguments for exec() call.
+        cmdArgs[i] = malloc(strlen(commands[i]));
+        strcpy(cmdArgs[i], commands[i]);
+      }
+      if (i == argumentsCounter - 1)
+      {
+        cmdArgs[argumentsCounter] = NULL;
+        executeCommand(cmd, cmdArgs, waitFlag);
+        free(cmd);
+        cmd = NULL;
+        hasActiveCommand = false;
       }
     }
-    if (currComm != NULL)
-    {
-      printf("Last Command Formed: %s\n", currComm);
-      // free(currComm); // Free the memory for currComm if there is something that is still not parsed yet
-    }
-    //set arguement to NULL here so that exec executes properly and knows to stop
-    commands[arguementsCounter++] = NULL;
-    //Fork into a child process for executing command.
-    executeCommand(commands[0], commands, waitFlag);
   }
   free(line);
   return 0;
@@ -142,7 +140,8 @@ int fetchline(char **line)
 
 // fork() into a child process.
 // execvp() to run command with Unix API.
-void executeCommand(char * command, char * commands[], bool waitFlag)
+void executeCommand(const char * command, const char * commands[], 
+  const bool waitFlag)
 {
   //  Process ID's are used to differentiate
   //  between parent and child. 
@@ -158,20 +157,15 @@ void executeCommand(char * command, char * commands[], bool waitFlag)
   //  If the process is a parent process, then
   //  parent must wait for child's exit. If "&"
   //  was specified then run concurrent.
-  else if (pid > 0) 
+  else if (pid > 0 && waitFlag) 
   {
-    if (waitFlag) waitpid(pid, NULL, 0);
+    waitpid(pid, NULL, 0);
     return;
   }
   //  Else, the command is processed with execvp()
   //  and a Unix command is executed. 
-  else 
+  else if (pid == 0)
   {
     execvp(command, commands);
-    _exit(EXIT_FAILURE);
   }
-  //  Flush stcout so that prompt remains 
-  //  after process is finished.
-  fflush(stdout);
-  return;
 }
