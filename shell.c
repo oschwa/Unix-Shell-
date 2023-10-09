@@ -43,11 +43,11 @@ int interactiveShell()
       spaceToken = strtok(NULL, " ");
     }
 
-    char * cmd = NULL;
-    char * cmdArgs[argumentsCounter + 1];
+    char *cmd = NULL;
+    char *cmdArgs[argumentsCounter + 1];
     bool waitFlag = true;
 
-    //the code below will parse through the string and print each command that needs to execute one by one. This will parse through seperators "&" and ";"
+    // the code below will parse through the string and print each command that needs to execute one by one. This will parse through seperators "&" and ";"
     int j = 0;
     for (int i = 0; i < argumentsCounter; i++)
     {
@@ -88,9 +88,9 @@ int interactiveShell()
   return 0;
 }
 
-void processLine(char *line) 
-{ 
-  printf("processing line: %s\n", line); 
+void processLine(char *line)
+{
+  printf("processing line: %s\n", line);
 }
 
 int runTests()
@@ -127,15 +127,15 @@ int fetchline(char **line)
 
 // fork() into a child process.
 // execvp() to run command with Unix API.
-void executeCommand(const char * command, const char * commands[], 
-  const bool waitFlag)
+void executeCommand(char *command, char *commands[],
+                    bool waitFlag)
 {
   //  Process ID's are used to differentiate
-  //  between parent and child. 
+  //  between parent and child.
   pid_t parent = getpid();
   pid_t pid = fork();
 
-  //  If the child process was unsuccessfully created, 
+  //  If the child process was unsuccessfully created,
   //  then return an error message.
   if (pid == -1)
   {
@@ -144,13 +144,13 @@ void executeCommand(const char * command, const char * commands[],
   //  If the process is a parent process, then
   //  parent must wait for child's exit. If "&"
   //  was specified then run concurrent.
-  else if (pid > 0 && waitFlag) 
+  else if (pid > 0 && waitFlag)
   {
     waitpid(pid, NULL, 0);
     return;
   }
   //  Else, the command is processed with execvp()
-  //  and a Unix command is executed. 
+  //  and a Unix command is executed.
   else if (pid == 0)
   {
     execvp(command, commands);
