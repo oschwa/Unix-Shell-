@@ -44,59 +44,43 @@ int interactiveShell()
     }
 
     char * cmd = NULL;
-    char * cmdArgs[argumentsCounter];
+    char * cmdArgs[argumentsCounter + 1];
     bool waitFlag = true;
-    bool hasActiveCommand = false;
 
     //the code below will parse through the string and print each command that needs to execute one by one. This will parse through seperators "&" and ";"
+    int j = 0;
     for (int i = 0; i < argumentsCounter; i++)
     {
-      if (strcmp(commands[i], ";") == 0)
+      if (strcmp(commands[i], ";") == 0 || strcmp(commands[i], "&") == 0)
       {
-        waitFlag = true;
-        if (hasActiveCommand)
-        {
-          cmdArgs[argumentsCounter - 1] = NULL;
-          executeCommand(cmd, cmdArgs, waitFlag);
-          free(cmd);  // Free previously allocated memory
-          cmd = NULL; // Reset pointer to NULL for the next command
-          hasActiveCommand = false;
-          continue;
-        }
-      }
-      else if (strcmp(commands[i], "&") == 0)
-      {
-        waitFlag = false;
-        if (hasActiveCommand)
-        {
-          cmdArgs[argumentsCounter - 1] = NULL;
-          executeCommand(cmd, cmdArgs, waitFlag);
-          free(cmd);  // Free previously allocated memory
-          cmd = NULL; // Reset pointer to NULL for the next command
-          hasActiveCommand = false;
-          continue;
-        }
+        waitFlag = (strcmp(commands[i], ";") == 0);
+        cmdArgs[j] = NULL; // Set the current position to NULL
+        executeCommand(cmd, cmdArgs, waitFlag);
+        free(cmd);
+        cmd = NULL;
+        memset(cmdArgs, '\0', sizeof(cmdArgs));
+        j = 0;
       }
       else
       {
         if (cmd == NULL)
         {
           // Allocate memory for the current command
-          cmd = malloc(strlen(commands[i]));
+          cmd = malloc(strlen(commands[i]) + 1);
           strcpy(cmd, commands[i]);
-          hasActiveCommand = true;
         }
-        // Concatenate the command arguments for exec() call.
-        cmdArgs[i] = malloc(strlen(commands[i]));
-        strcpy(cmdArgs[i], commands[i]);
+        cmdArgs[j] = commands[i];
+        ++j;
       }
+
       if (i == argumentsCounter - 1)
       {
-        cmdArgs[argumentsCounter] = NULL;
+        cmdArgs[j] = NULL;
         executeCommand(cmd, cmdArgs, waitFlag);
         free(cmd);
         cmd = NULL;
-        hasActiveCommand = false;
+        memset(cmdArgs, '\0', sizeof(cmdArgs));
+        j = 0;
       }
     }
   }
@@ -104,7 +88,10 @@ int interactiveShell()
   return 0;
 }
 
-void processLine(char *line) { printf("processing line: %s\n", line); }
+void processLine(char *line) 
+{ 
+  printf("processing line: %s\n", line); 
+}
 
 int runTests()
 {
