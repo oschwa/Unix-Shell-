@@ -34,60 +34,7 @@ int interactiveShell()
       should_run = false;
       continue;
     }
-    // split string by spaces
-    char *spaceToken = strtok(line, " ");
-
-    // create pointer to array to store all commands
-    char *commands[MAXLINE];
-    int argumentsCounter = 0;
-
-    // parse through string and extract all commands
-    while (spaceToken != NULL)
-    {
-      commands[argumentsCounter++] = spaceToken;
-      spaceToken = strtok(NULL, " ");
-    }
-
-    char *cmd = NULL;
-    char *cmdArgs[argumentsCounter + 1];
-    bool waitFlag = true;
-
-    // the code below will parse through the string and print each command that needs to execute one by one. This will parse through seperators "&" and ";"
-    int j = 0;
-    for (int i = 0; i < argumentsCounter; i++)
-    {
-      if (strcmp(commands[i], ";") == 0 || strcmp(commands[i], "&") == 0)
-      {
-        waitFlag = (strcmp(commands[i], ";") == 0);
-        cmdArgs[j] = NULL; // Set the current position to NULL
-        executeCommand(cmd, cmdArgs, waitFlag);
-        free(cmd);
-        cmd = NULL;
-        memset(cmdArgs, '\0', sizeof(cmdArgs));
-        j = 0;
-      }
-      else
-      {
-        if (cmd == NULL)
-        {
-          // Allocate memory for the current command
-          cmd = malloc(strlen(commands[i]) + 1);
-          strcpy(cmd, commands[i]);
-        }
-        cmdArgs[j] = commands[i];
-        ++j;
-      }
-
-      if (i == argumentsCounter - 1)
-      {
-        cmdArgs[j] = NULL;
-        executeCommand(cmd, cmdArgs, waitFlag);
-        free(cmd);
-        cmd = NULL;
-        memset(cmdArgs, '\0', sizeof(cmdArgs));
-        j = 0;
-      }
-    }
+    processLine(line);
   }
   free(line);
   return 0;
