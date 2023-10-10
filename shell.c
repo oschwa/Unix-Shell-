@@ -1,9 +1,6 @@
 #include "shell.h"
 
-struct instructions{
-  char* command[MAXLINE];
-  char* arguements[MAXLINE];
-};
+char *hist;
 
 int main(int argc, char **argv)
 {
@@ -40,7 +37,7 @@ int interactiveShell()
   return 0;
 }
 
-void processLine(char *line)
+void parseAndExecute(char *line)
 {
   printf("processing line: %s\n", line);
 
@@ -63,7 +60,6 @@ void processLine(char *line)
   bool waitFlag = true;
 
   // the code below will parse through the string and print each command that needs to execute one by one. This will parse through seperators "&" and ";"
-
   int j = 0;
   for (int i = 0; i < argumentsCounter; i++)
   {
@@ -87,18 +83,32 @@ void processLine(char *line)
       }
       cmdArgs[j] = commands[i];
       ++j;
-      }
-
-      if (i == argumentsCounter - 1)
-      {
-        cmdArgs[j] = NULL;
-        executeCommand(cmd, cmdArgs, waitFlag);
-        free(cmd);
-        cmd = NULL;
-        memset(cmdArgs, '\0', sizeof(cmdArgs));
-        j = 0;
-      }
     }
+
+    if (i == argumentsCounter - 1)
+    {
+      cmdArgs[j] = NULL;
+      executeCommand(cmd, cmdArgs, waitFlag);
+      free(cmd);
+      cmd = NULL;
+      memset(cmdArgs, '\0', sizeof(cmdArgs));
+      j = 0;
+    }
+  }
+}
+void processLine(char *line)
+{
+  // check if history command is envoked
+  if (strcmp(line, "!!") == 0)
+  {
+    parseAndExecute(hist);
+  }
+  else
+  {
+    //add current command to history and parse
+    hist = strdup(line);
+    parseAndExecute(line);
+  }
 }
 
 int runTests()
