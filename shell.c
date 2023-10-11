@@ -37,6 +37,72 @@ int interactiveShell()
   return 0;
 }
 
+void executeCommandsToPipe(char * cmd, char * cmdArgs[], char * arguments[MAXLINE], int currIndex, int numOfArguments)
+{
+  //  Second command arguments pointers
+  char * otherCmdArgs[numOfArguments - currIndex];
+  char * otherCmd = NULL;
+
+  //  Obtain command that pipe will provide input for.
+  int i = currIndex + 1;
+  while (i < numOfArguments)
+  {
+    if (otherCmd == NULL) 
+    {
+      otherCmd = malloc(strlen(arguments[i]) + 1);
+      strcpy(otherCmd, arguments[i]);
+    }
+    otherCmdArgs[i] = malloc(strlen(arguments[i]) + 1);
+    strcpy(otherCmdArgs, arguments[i]);
+    ++i;
+  }
+
+  //  Fork a child process, that forks another child process.
+  int fileDescriptor[2];
+  pipe(fileDescriptor);
+  pid_t pid = fork();
+
+  //  If the current process is the first child process, place
+  //  contents of first command execution into standard output.
+  //  This is read later by the second child process.
+  if(pid == 0)
+  {
+    //  In the array that serves as the structure for the pipe, the
+    //  indexes 0 and 1 represent the read-end and the write-end respectively.
+    close(fileDescriptor[0]);
+    dup2(fileDescriptor[1], STDOUT_FILENO);
+    close(fileDescriptor[1]);
+    execlp(cmd, cmdArgs, (char*)NULL);
+    exit(1);
+  }
+  else
+  { 
+    pid=fork();
+    //  If the current process is the second child process, then
+    //  read contents of previous command from standard input.
+    if(pid == 0)
+    {
+        close(fileDescriptor[1]);
+        dup2(fileDescriptor[0], STDIN_FILENO);
+        close(fileDescriptor[0]);
+        //  In this case, the second command does need a null
+        //  terminator added.
+        execlp(otherCmd, otherCmdArgs, (char*) NULL);
+        exit(1);
+    }
+    else
+    {
+        //  Original parent process ensures that the 
+        //  write/read of the pipe are fully closed.
+        //  Then, the process waits for children.
+        int status;
+        close(fileDescriptor[0]);
+        close(fileDescriptor[1]);
+        waitpid(pid, &status, 0);
+    }
+  }
+} 
+
 void inputRedirect(char *firstParam, char *file)
 {
   pid_t parent = getpid();
@@ -144,6 +210,16 @@ void parseAndExecute(char *line)
       cmd = NULL;
       memset(cmdArgs, '\0', sizeof(cmdArgs));
       j = 0;
+    }
+    else if (strcmp(commands[i], "|") == 0)
+    {
+      //  method for opening pipe and transmitting command data between
+      //  processes.
+      executeCommandsToPipe(cmd, cmdArgs, commands, j, argumentsCounter);
+      //  TODO: Given that the pipe implementation only supports
+      //  two commands, and not chaining, the inner loop is exited
+      //  after one pipe is detected. This returns to the prompt. 
+      break;
     }
     else
     {
