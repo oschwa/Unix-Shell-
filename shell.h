@@ -16,6 +16,8 @@
 #define RD 0
 #define WR 1
 
+void makePipe();
+void executeCommandsToPipe(char * cmd, char * cmdArgs[], char * arguments[MAXLINE], int currIndex, int numOfArguments);
 bool equal(char *a, char *b);
 int fetchline(char **line);
 int interactiveShell();
