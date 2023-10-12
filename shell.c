@@ -291,7 +291,6 @@ void processLine(char *line)
     hist = strdup(line);
     parseAndExecute(line);
   }
-  free(hist);
 }
 
 int runTests()
