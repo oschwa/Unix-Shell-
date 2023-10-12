@@ -134,6 +134,7 @@ void inputRedirect(char *firstParam, char *file)
     if (file_desc == -1) // in the case we couldn't open the file for whatever reason
     {
       printf("File for input redirect %s could not open successfully\n", file);
+      close(file_desc);
     }
     else
     {
@@ -142,6 +143,7 @@ void inputRedirect(char *firstParam, char *file)
       char *command[] = {firstParam, NULL};
       bool flag = false;
       execvp(firstParam, command);
+      close(file_desc);
       return;
     }
   }
@@ -164,6 +166,7 @@ void outputRedirect(char *firstParam, char *file, char *args[])
     if (file_desc == -1) // in the case we couldn't open the file for whatever reason
     {
       printf("File for output redirect %s could not open successfully\n", file);
+      close(file_desc);
     }
     else
     {
@@ -171,6 +174,7 @@ void outputRedirect(char *firstParam, char *file, char *args[])
       dup2(file_desc, STDOUT_FILENO);
       bool flag = false;
       execvp(firstParam, args);
+      close(file_desc);
       return;
     }
   }
@@ -219,6 +223,7 @@ void parseAndExecute(char *line)
       cmd = NULL;
       memset(cmdArgs, '\0', sizeof(cmdArgs));
       j = 0;
+      
     }
     else if (strcmp(commands[i], "<") == 0 || strcmp(commands[i], ">") == 0)
     { // detect input redirection
@@ -226,12 +231,12 @@ void parseAndExecute(char *line)
       // check which type of redirection and go to corressponding function
       //  commands [i+1] grabs the file name
       (strcmp(commands[i], "<") == 0) ? inputRedirect(cmd, commands[i + 1]) : outputRedirect(cmd, commands[i + 1], cmdArgs);
-
       // clear mem for the next input
       free(cmd);
       cmd = NULL;
       memset(cmdArgs, '\0', sizeof(cmdArgs));
       j = 0;
+      break;
     }
     else if (strcmp(commands[i], "|") == 0)
     {
