@@ -16,12 +16,14 @@
 #define RD 0
 #define WR 1
 
-void makePipe();
 void executeCommandsToPipe(char * cmd, char * cmdArgs[], char * arguments[MAXLINE], int currIndex, int numOfArguments);
 bool equal(char *a, char *b);
 int fetchline(char **line);
 int interactiveShell();
 int runTests();
+void inputRedirect(char *firstParam, char *file);
+void outputRedirect(char *firstParam, char *file, char *args[]);
+void parseAndExecute(char *line);
 void processLine(char *line);
 void executeCommand( char * command,  char * commands[],  bool waitFlag);
 int main();

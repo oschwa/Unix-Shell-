@@ -1,3 +1,13 @@
+/*
+Authors: Oliver Schwab & Disha Mahajan
+Description: Working Unix Shell capable of using fork(), execvp(), dup2(), pipe() system calls to perform the following actions:
+Opening a pipe by using the "|" symbol between commands
+Redirecting input and output between commands using '<' and '>'
+Running commands concurrently with the '&' symbol
+
+This is the implementation file which contains the main method.
+
+*/
 #include "shell.h"
 
 char *hist;
@@ -105,11 +115,11 @@ void executeCommandsToPipe(char *cmd, char *cmdArgs[], char *arguments[], int cu
     }
   }
 
-  for (int j = 0; j < numOfArguments - currIndex; j++){
+  for (int j = 0; j < numOfArguments - currIndex; j++)
+  {
     free(otherCmdArgs[j]);
   }
   free(otherCmd);
-
 }
 
 void inputRedirect(char *firstParam, char *file)
@@ -263,6 +273,17 @@ void processLine(char *line)
   if (strcmp(line, "!!") == 0)
   {
     parseAndExecute(hist);
+  }
+  else if (strcmp(line, "ascii") == 0)
+  {
+    printf("     ________\n");
+    printf("    /        \\\n");
+    printf("   /    __    \\\n");
+    printf("  /    /  \\    \\\n");
+    printf(" /____/____\\____\\\n");
+    printf("|        __      |\n");
+    printf("|      |   |     |\n");
+    printf("|______|___|_____|\n");
   }
   else
   {
